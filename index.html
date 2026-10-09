@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RegTrace · Regulatory impact console</title>
+  <meta name="description" content="RegTrace MVP: graph AI that traces MAS and RBI regulatory changes to the exact policies, processes, systems, APIs, data and controls they affect." />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <!-- ============================================================ top bar -->
+    <header class="topbar">
+      <a class="brand" href="#overview" data-nav="overview">
+        <img src="assets/logo.svg" alt="" class="mark" />
+        <span class="word">Reg<b>Trace</b></span>
+        <span class="tag">Impact console</span>
+      </a>
+      <div class="corridor" title="Rulebooks mapped: Monetary Authority of Singapore and Reserve Bank of India">
+        <img src="assets/flag_sg.png" alt="Singapore" /><span>MAS</span>
+        <span class="pulse-line"><i></i></span>
+        <span>RBI</span><img src="assets/flag_in.png" alt="India" />
+      </div>
+      <div class="status">
+        <span class="chip" id="chip-graph"><i class="dot ok"></i>Graph loading…</span>
+        <span class="chip" id="chip-circ"><i class="dot"></i>No circular traced</span>
+        <button class="btn primary sm" id="btn-tour"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>Judge walkthrough</button>
+      </div>
+    </header>
+
+    <!-- ============================================================ nav -->
+    <nav class="sidenav">
+      <button data-nav="overview" class="active"><svg viewBox="0 0 24 24"><path d="M3 12l9-8 9 8M5 10v10h14V10" /></svg><span>Overview</span></button>
+      <button data-nav="studio"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg><span>Data studio</span></button>
+      <button data-nav="analyze"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z" /><path d="M14 3v6h6M8 13h8M8 17h5" /></svg><span>Analyse circular</span></button>
+      <button data-nav="graph"><svg viewBox="0 0 24 24"><path d="M12 2l9 5-9 5-9-5z" /><path d="M3 12l9 5 9-5M3 17l9 5 9-5" /></svg><span>3D impact graph</span></button>
+      <button data-nav="crossmap"><svg viewBox="0 0 24 24"><path d="M7 7h11l-3-3M17 17H6l3 3" /></svg><span>MAS ⇄ RBI cross-map</span></button>
+      <button data-nav="diff"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h4M7 6v4M15 16h4" /></svg><span>Version diff</span></button>
+      <button data-nav="links"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1" /></svg><span>Missing links</span><em class="badge" id="nav-links-count" hidden>0</em></button>
+      <button data-nav="tickets"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 9h8M8 13h8M8 17h4" /></svg><span>Action tickets</span><em class="badge" id="nav-tickets-count" hidden>0</em></button>
+      <button data-nav="bench"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg><span>Benchmark</span></button>
+      <button data-nav="audit"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 018 0v3" /></svg><span>Audit trail</span></button>
+      <div class="nav-foot">
+        <p>MVP · synthetic bank & demo circulars</p>
+        <p>Team SkyNRG · SIH 2026</p>
+      </div>
+    </nav>
+
+    <main>
+      <!-- ========================================================= OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <div class="hero">
+          <div class="stage" id="stage-hero"></div>
+          <div class="hero-copy">
+            <p class="eyebrow">Singapore India Hackathon 2026 · FinTech &amp; InsurTech</p>
+            <h1>From circular to code<br />in <span class="grad">seconds</span></h1>
+            <p class="lead">RegTrace reads a new MAS or RBI circular, links every obligation to the bank's own policies, processes, systems, APIs, data and controls, and traces the impact through a dependency graph – with the path that explains each result.</p>
+            <div class="cta">
+              <button class="btn primary" id="btn-quick"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>Trace a demo RBI circular</button>
+              <button class="btn ghost" data-nav="analyze">Upload your own</button>
+            </div>
+            <div class="hero-stats" id="hero-stats"></div>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><b>1</b><h4>Parse</h4><p>PDF / text → numbered clauses, dates, thresholds</p></div>
+          <div class="step"><b>2</b><h4>Extract</h4><p>Obligation type, topics, deadlines, parameters</p></div>
+          <div class="step"><b>3</b><h4>Link</h4><p>Clause → policies, controls, systems via TF-IDF + concepts + obligation library</p></div>
+          <div class="step"><b>4</b><h4>Propagate</h4><p>Best-path impact through 9 layers with explainable scores</p></div>
+          <div class="step"><b>5</b><h4>Act</h4><p>MAS⇄RBI gaps, version diff, tickets, audit trail</p></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 id="bank-title">Bank graph</h3>
+            <p class="muted" id="bank-desc"></p>
+            <div id="layer-bars" class="bars"></div>
+          </div>
+          <div class="card">
+            <h3>Obligation library</h3>
+            <p class="muted">Requirements the bank already meets, each mapped to its controls. Paraphrased summaries for the demo – not legal text.</p>
+            <div id="lib-summary"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= DATA STUDIO -->
+      <section class="view" id="view-studio">
+        <div class="view-head"><div><h2>Data studio</h2><p class="muted">Nothing here is fixed. Generate a different bank, load your own dependency map, extend the regulatory library, and tune the engine – every view recalculates from the data.</p></div></div>
+        <div class="grid-2" style="align-items:start">
+          <div class="card" id="gen-card">
+            <h3>Synthetic bank generator</h3>
+            <p class="muted" style="font-size:12.5px">A fictional bank operating in Singapore and India. The seed changes generated services, criticality and which links are undocumented; the size adds microservices and endpoints.</p>
+            <div class="form-row three">
+              <label>Seed<span class="inline"><input id="gen-seed" type="number" value="2026" /><button class="btn ghost sm" id="gen-dice" title="Random seed">🎲</button></span></label>
+              <label>Size<select id="gen-scale"></select></label>
+              <label>Undocumented links <b id="gen-hidden-v">10%</b><input id="gen-hidden" type="range" min="0" max="30" value="10" /></label>
+            </div>
+            <button class="btn primary wide" id="gen-go">Generate bank</button>
+            <div id="gen-stats" class="kpis" style="margin-top:12px"></div>
+          </div>
+          <div class="card">
+            <h3>Import your own bank map</h3>
+            <p class="muted" style="font-size:12.5px">Load a JSON export from a CMDB / GRC tool: nodes (policy, process, system, api, datastore, control, evidence, team, regulation) and typed edges. Processed locally.</p>
+            <label class="drop" id="bank-drop"><input type="file" id="bank-file" accept=".json,application/json" hidden />
+              <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg><span><b>Drop a bank JSON</b> or click to browse<br /><small>format: regtrace-bank/1</small></span></label>
+            <div class="head-actions" style="margin-top:10px"><button class="btn ghost sm" id="bank-export">Export current bank (template)</button><button class="btn ghost sm" id="bank-reset">Reset to default bank</button></div>
+            <pre class="schema">{ "nodes": [{ "id": "sys_pay", "type": "system", "name": "Payment Gateway",
+             "desc": "…", "owner": "t_payments" }, …],
+  "edges": [{ "s": "prc_xb", "t": "sys_pay", "type": "runs_on" }, …] }
+edge types: governs · runs_on · exposes · calls · stores · controlled_by
+monitored_by · protects · evidenced_by · owned_by · satisfied_by · implemented_in</pre>
+            <div id="bank-problems"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="align-items:start">
+          <div class="card">
+            <h3>Engine settings</h3>
+            <p class="muted" style="font-size:12.5px">Change how impact is linked and propagated. The current circular is re-traced live.</p>
+            <div id="cfg-sliders" class="sliders"></div>
+            <div id="cfg-effect" class="muted" style="font-size:12.5px;margin-top:8px"></div>
+          </div>
+          <div class="card">
+            <h3>Add an obligation to the library</h3>
+            <p class="muted" style="font-size:12.5px">Teach RegTrace a requirement the bank already meets. New circulars are cross-mapped against it immediately.</p>
+            <div class="form-row"><label>Regulator<select id="ob-reg"><option>MAS</option><option>RBI</option></select></label><label>Source document<input id="ob-doc" placeholder="e.g. MAS Notice 644" /></label></div>
+            <label class="stack">Obligation text<textarea id="ob-text" rows="2" placeholder="e.g. Notify customers of any change to their registered mobile number within 1 hour."></textarea></label>
+            <label class="stack">Satisfied by controls<input id="ob-ctl-in" list="ob-ctl-list" placeholder="type a control code or name, press Enter" /><datalist id="ob-ctl-list"></datalist></label>
+            <div id="ob-ctl-chips" class="cmp-chips"></div>
+            <button class="btn primary wide" id="ob-add">Add to library</button>
+          </div>
+        </div>
+        <div class="card"><div class="doc-head"><h3>Obligation library</h3><input id="lib-filter" placeholder="Filter…" style="width:220px" /></div><div id="lib-table"></div></div>
+      </section>
+
+      <!-- ========================================================= ANALYSE -->
+      <section class="view" id="view-analyze">
+        <div class="view-head">
+          <div><h2>Analyse a circular</h2><p class="muted">Pick a demo circular or upload your own (.pdf, .txt). Everything runs in your browser – nothing is uploaded.</p></div>
+        </div>
+        <div class="analyze-grid">
+          <div class="col">
+            <div class="card">
+              <h3>Source</h3>
+              <div id="demo-list" class="demo-list"></div>
+              <label class="drop" id="drop">
+                <input type="file" id="file" accept=".pdf,.txt,.md,text/plain,application/pdf" hidden />
+                <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" /></svg>
+                <span><b>Drop a circular here</b> or click to browse<br /><small>PDF or text · parsed locally</small></span>
+              </label>
+              <details class="paste">
+                <summary>Paste text instead</summary>
+                <textarea id="paste" rows="8" placeholder="Paste the circular text – numbered paragraphs work best."></textarea>
+                <button class="btn ghost sm" id="btn-paste">Use pasted text</button>
+              </details>
+              <div class="form-row">
+                <label>Regulator<select id="sel-reg"><option value="">Auto-detect</option><option>MAS</option><option>RBI</option></select></label>
+                <label>Effective date<input type="date" id="inp-eff" /></label>
+              </div>
+              <button class="btn primary wide" id="btn-run" disabled><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>Run RegTrace</button>
+            </div>
+            <div class="card doc-card">
+              <div class="doc-head"><h3>Document</h3><span class="muted" id="doc-meta">No document loaded</span><button class="btn ghost sm" id="btn-edit-doc" disabled>Edit text</button></div>
+              <pre class="doc" id="doc-view"></pre>
+              <textarea class="doc doc-edit" id="doc-edit" hidden></textarea>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card pipeline" id="pipeline">
+              <div class="pstep" data-s="parse"><i></i><span>Parse</span><em></em></div>
+              <div class="pstep" data-s="extract"><i></i><span>Extract</span><em></em></div>
+              <div class="pstep" data-s="link"><i></i><span>Link</span><em></em></div>
+              <div class="pstep" data-s="propagate"><i></i><span>Propagate</span><em></em></div>
+              <div class="pstep" data-s="crossmap"><i></i><span>Cross-map</span><em></em></div>
+            </div>
+            <div class="card composer" id="composer">
+              <div class="doc-head"><h3>Live clause lab</h3><span class="muted">Type any requirement – RegTrace analyses it on every keystroke</span></div>
+              <div class="composer-row">
+                <textarea id="cmp-text" rows="3" placeholder="e.g. Banks shall notify customers by SMS within 5 minutes when their registered email address is changed."></textarea>
+                <select id="cmp-reg"><option>RBI</option><option>MAS</option></select>
+              </div>
+              <div class="cmp-chips" id="cmp-try"></div>
+              <div id="cmp-out"></div>
+            </div>
+            <div id="result-kpis" class="kpis"></div>
+            <div id="clause-list" class="clause-list">
+              <div class="empty"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z" /><path d="M14 3v6h6" /></svg><p>Results appear here: each clause, what it obliges, what it directly touches in the bank, and whether MAS or RBI already require it.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= GRAPH -->
+      <section class="view" id="view-graph">
+        <div class="graph-wrap">
+          <div class="stage" id="stage-graph"></div>
+          <div class="g-toolbar">
+            <div class="seg" id="seg-color"><button data-v="type" class="on">Type</button><button data-v="impact">Impact heat</button><button data-v="region">Region</button></div>
+            <label class="tog"><input type="checkbox" id="tg-focus" /><span>Focus impacted</span></label>
+            <label class="tog"><input type="checkbox" id="tg-labels" checked /><span>Labels</span></label>
+            <label class="tog"><input type="checkbox" id="tg-rotate" checked /><span>Rotate</span></label>
+            <label class="rng">Layers<input type="range" id="rg-spacing" min="8" max="26" value="15" /></label>
+            <label class="rng">Glow<input type="range" id="rg-bloom" min="0" max="20" value="10" /></label>
+            <button class="btn ghost sm" id="btn-replay" title="Replay impact wave">↻ Wave</button>
+            <button class="btn ghost sm" id="btn-reset">Reset view</button>
+            <div class="search"><input id="g-search" list="g-nodes" placeholder="Find a policy, system, control…" /><datalist id="g-nodes"></datalist></div>
+          </div>
+          <div class="g-legend" id="g-legend"></div>
+          <aside class="g-panel" id="g-panel">
+            <div id="g-summary"></div>
+            <div id="g-detail"></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ========================================================= CROSSMAP -->
+      <section class="view" id="view-crossmap">
+        <div class="view-head"><div><h2>MAS ⇄ RBI cross-map</h2><p class="muted">For every clause: is it already met by an obligation from either regulator, met but with a stricter parameter, or a real gap? Comply once, map to both.</p></div></div>
+        <div id="xm-body"></div>
+        <div class="card">
+          <h3>Corridor coverage matrix</h3>
+          <p class="muted">Obligations in the library per topic, and controls that already satisfy both MAS and RBI.</p>
+          <div id="xm-matrix"></div>
+        </div>
+      </section>
+
+      <!-- ========================================================= DIFF -->
+      <section class="view" id="view-diff">
+        <div class="view-head">
+          <div><h2>Version diff</h2><p class="muted">Most regulation is amendment. Compare two versions clause by clause, then trace only what changed.</p></div>
+          <div class="head-actions">
+            <select id="diff-old"></select><span class="arrow">→</span><select id="diff-new"></select>
+            <button class="btn primary sm" id="btn-diff">Compare</button>
+          </div>
+        </div>
+        <div id="diff-body"></div>
+      </section>
+
+      <!-- ========================================================= LINKS -->
+      <section class="view" id="view-links">
+        <div class="view-head">
+          <div><h2>Missing links</h2><p class="muted">No bank's dependency map is complete. RegTrace suggests likely missing links (process→system, system→data, system→control) from graph structure and text. An analyst accepts or rejects each one.</p></div>
+          <div class="head-actions">
+            <label class="tog"><input type="checkbox" id="tg-truth" /><span>Reveal held-out truth</span></label>
+            <button class="btn primary sm" id="btn-links">Suggest links</button>
+          </div>
+        </div>
+        <div id="links-metrics" class="kpis"></div>
+        <div id="links-body"></div>
+      </section>
+
+      <!-- ========================================================= TICKETS -->
+      <section class="view" id="view-tickets">
+        <div class="view-head">
+          <div><h2>Action tickets</h2><p class="muted">Every impacted item becomes a task with an owner, a priority, a deadline worked back from the effective date, and the audit evidence needed. AI proposes, a person approves.</p></div>
+          <div class="head-actions">
+            <select id="tk-filter-pr"><option value="">All priorities</option><option>P1</option><option>P2</option><option>P3</option></select>
+            <select id="tk-filter-owner"><option value="">All owners</option></select>
+            <button class="btn ghost sm" id="btn-approve-p1">Approve all P1</button>
+            <button class="btn ghost sm" id="btn-csv">Export CSV</button>
+            <button class="btn ghost sm" id="btn-json">Export JSON</button>
+            <button class="btn primary sm" id="btn-report">Impact report</button>
+          </div>
+        </div>
+        <div id="tk-kpis" class="kpis"></div>
+        <div id="tk-body"></div>
+      </section>
+
+      <!-- ========================================================= BENCH -->
+      <section class="view" id="view-bench">
+        <div class="view-head">
+          <div><h2>Benchmark</h2><p class="muted">Does graph reasoning beat document search? Five demo circulars, expert-labelled anchors, ground truth traced over the bank's full (true) dependency graph.</p></div>
+          <div class="head-actions"><button class="btn primary sm" id="btn-bench">Run benchmark</button></div>
+        </div>
+        <div id="bench-kpis" class="kpis"></div>
+        <div class="grid-2">
+          <div class="card"><h3>F1 by circular</h3><div id="bench-chart"></div></div>
+          <div class="card"><h3>Method</h3><div id="bench-method"></div></div>
+        </div>
+        <div class="card"><h3>Results</h3><div id="bench-table"></div></div>
+      </section>
+
+      <!-- ========================================================= AUDIT -->
+      <section class="view" id="view-audit">
+        <div class="view-head">
+          <div><h2>Audit trail</h2><p class="muted">Every analysis, decision and export is recorded in a hash-chained log (SHA-256). Changing any past entry breaks the chain.</p></div>
+          <div class="head-actions"><button class="btn ghost sm" id="btn-verify">Verify chain</button><button class="btn ghost sm" id="btn-audit-export">Export log</button></div>
+        </div>
+        <div id="audit-body"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toasts"></div>
+  <div id="tour" hidden>
+    <div class="tour-hole"></div>
+    <div class="tour-card">
+      <div class="tour-progress"><i id="tour-bar"></i></div>
+      <div class="tour-top"><span class="tour-step" id="tour-step"></span><span class="tour-chapter" id="tour-chapter"></span></div>
+      <h4 id="tour-title"></h4>
+      <div class="tour-body" id="tour-body"></div>
+      <div class="tour-actions">
+        <label class="tog sm"><input type="checkbox" id="tour-auto" /><span>Auto-play</span></label>
+        <label class="tog sm"><input type="checkbox" id="tour-voice" /><span>Narrate</span></label>
+        <span style="flex:1"></span>
+        <button class="btn ghost sm" id="tour-skip">Exit</button><button class="btn ghost sm" id="tour-prev">Back</button><button class="btn primary sm" id="tour-next">Next</button>
+      </div>
+    </div>
+  </div>
+  <div id="boot"><div class="boot-in"><img src="assets/logo.svg" alt="" /><p>Building dependency graph…</p></div></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
